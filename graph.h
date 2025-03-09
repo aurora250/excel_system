@@ -120,6 +120,23 @@ public:
         }
     }
 
+    void traverse_all_nodes(std::function<void(const T&)> operation) {
+        std::unordered_set<T> visited;
+        for (const auto& pair : adj_list) {
+            const T& node = pair.first;
+            if (visited.find(node) == visited.end()) {
+                operation(node);
+                visited.insert(node);
+            }
+            for (const auto& neighbor : pair.second) {
+                if (visited.find(neighbor) == visited.end()) {
+                    operation(neighbor);
+                    visited.insert(neighbor);
+                }
+            }
+        }
+    }
+
     void print() {
         for (const auto& pair : adj_list) {
             qDebug() << "Node " << pair.first << " -> ";

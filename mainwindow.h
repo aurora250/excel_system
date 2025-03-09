@@ -51,12 +51,12 @@ private slots:
     void tab_double_clicked(int);
     // table widget:
     void table_view(QTableWidgetItem*);
-    void table_item_changed(QTableWidgetItem*);
+    //void table_item_changed(QTableWidgetItem*);
     void table_vertical_bar_changed(int);
     void table_horizontal_bar_changed(int);
     // file:
-    void read_binary_triggered(bool);
-    void save_binary_triggered(bool);
+    //void read_binary_triggered(bool);
+    //void save_binary_triggered(bool);
     void read_mcsv_triggered(bool);
     void save_mcsv_triggered(bool);
     void read_csv_triggered(bool);

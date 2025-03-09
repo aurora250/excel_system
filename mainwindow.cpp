@@ -158,101 +158,103 @@ void MainWindow::expand_htable(CaculateTable* table, uint32_t column){
     }
 }
 
-bool MainWindow::read_binary(const QString& file_path) {
-    auto start = std::chrono::high_resolution_clock().now();
-    blockSignals(true);
-    QFile file(file_path);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);
-        while (!in.atEnd()) {
-            int row, column;
-            QString tab;
-            in >> row >> column >> tab;
-            CaculateTable* table = find_tab(tab);
-            if(table == nullptr)
-                table = add_panel(tab);
-            if(row > table->rowCount()) expand_vtable(table, row - table->rowCount());
-            if(column > table->columnCount()) expand_htable(table, column - table->columnCount());
+// bool MainWindow::read_binary(const QString& file_path) {
+//     auto start = std::chrono::high_resolution_clock().now();
+//     blockSignals(true);
+//     QFile file(file_path);
+//     if (file.open(QIODevice::ReadOnly)) {
+//         QDataStream in(&file);
+//         while (!in.atEnd()) {
+//             int row, column;
+//             QString tab;
+//             in >> row >> column >> tab;
+//             CaculateTable* table = find_tab(tab);
+//             if(table == nullptr)
+//                 table = add_panel(tab);
+//             if(row > table->rowCount()) expand_vtable(table, row - table->rowCount());
+//             if(column > table->columnCount()) expand_htable(table, column - table->columnCount());
 
-            for (int i = 0; i < row; i++) {
-                for (int j = 0; j < column; j++) {
-                    QString func;
-                    in >> func;
-                    QPair<int, int> pir = { i, j };
-                    CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
+//             for (int i = 0; i < row; i++) {
+//                 for (int j = 0; j < column; j++) {
+//                     QString func;
+//                     in >> func;
+//                     QPair<int, int> pir = { i, j };
+//                     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
 
-                    auto final = Parser().parse(pir, table, func);
-                    if (final.first == STRING_STATE::INVALID || final.first == STRING_STATE::HAS_CYCLE
-                        || final.first == STRING_STATE::NOT_NUMBER) {
-                        item->setText(func);
-                    }
-                    else {
-                        item->update_caculate(final.second);
-                        item->update_func(func);
-                        item->setText(QString::number(final.second));
-                        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-                            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                                (table->item(value.first, value.second));
-                            auto final = Parser().parse(value, table, item->get_func());
-                            item->update_caculate(final.second);
-                            item->setText(QString::number(final.second));
-                        });
-                    }
-                }
-            }
-        }
-        file.close();
-        blockSignals(false);
-        auto last = std::chrono::high_resolution_clock().now();
-        qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
-        return true;
-    }
-    else {
-        qDebug() << u8"Unable to open file for reading.";
-        blockSignals(false);
-        return false;
-    }
-}
+//                     auto final = Parser().parse(pir, table, func.toStdString());
+//                     if (final.first == false) {
+//                         item->setText(func);
+//                     }
+//                     else {
+//                         item->update_caculate(final.second);
+//                         item->update_func(func);
+//                         item->setText(QString::number(final.second));
+//                         table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
+//                             CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
+//                                 (table->item(value.first, value.second));
+//                             auto final = Parser().parse(value, table, item->get_func());
+//                             item->update_caculate(final.second);
+//                             item->setText(QString::number(final.second));
+//                         });
+//                     }
+//                 }
+//             }
+//         }
+//         file.close();
+//         blockSignals(false);
+//         auto last = std::chrono::high_resolution_clock().now();
+//         qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
+//         return true;
+//     }
+//     else {
+//         qDebug() << u8"Unable to open file for reading.";
+//         blockSignals(false);
+//         return false;
+//     }
+// }
 
-bool MainWindow::save_binary(const QString& file_path) {
-    blockSignals(true);
-    auto start = std::chrono::high_resolution_clock::now();
-    QFile file(file_path);
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);
-        for(int i=0;i<tables_.size();i++){
-            QTableWidget* table = tables_.at(i);
-            uint32_t row = table->rowCount();
-            uint32_t col = table->columnCount();
-            out << row << col << ui->main_tab->tabText(i);
-            for (uint32_t i = 0; i < row; i++) {
-                for (uint32_t j = 0; j < col; j++) {
-                    CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
-                    QString func = item->get_func();
-                    QString str = (func.isEmpty() ? item->text() : func);
-                    out << str;
-                }
-            }
-        }
-        file.close();
-        auto last = std::chrono::high_resolution_clock().now();
-        qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
-        blockSignals(false);
-        return true;
-    }
-    else {
-        qDebug() << u8"Unable to open file for writing.";
-        blockSignals(false);
-        return false;
-    }
-}
+// bool MainWindow::save_binary(const QString& file_path) {
+//     blockSignals(true);
+//     auto start = std::chrono::high_resolution_clock::now();
+//     QFile file(file_path);
+//     if (file.open(QIODevice::WriteOnly)) {
+//         QDataStream out(&file);
+//         for(int i=0;i<tables_.size();i++){
+//             QTableWidget* table = tables_.at(i);
+//             uint32_t row = table->rowCount();
+//             uint32_t col = table->columnCount();
+//             out << row << col << ui->main_tab->tabText(i);
+//             for (uint32_t i = 0; i < row; i++) {
+//                 for (uint32_t j = 0; j < col; j++) {
+//                     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
+//                     QString func = item->get_func();
+//                     QString str = (func.isEmpty() ? item->text() : func);
+//                     out << str;
+//                 }
+//             }
+//         }
+//         file.close();
+//         auto last = std::chrono::high_resolution_clock().now();
+//         qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
+//         blockSignals(false);
+//         return true;
+//     }
+//     else {
+//         qDebug() << u8"Unable to open file for writing.";
+//         blockSignals(false);
+//         return false;
+//     }
+// }
 
 bool MainWindow::read_mcsv(const QString& file_path) {
     blockSignals(true);
+    for(int i=0;i<tables_.size();i++)
+        tables_[i]->blockSignals(true);
     auto start = std::chrono::high_resolution_clock::now();
     QFile file(file_path);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
+        Parser parser;
         while (!in.atEnd()) {
             QString line = in.readLine();
             if (line.isEmpty()) continue;
@@ -269,32 +271,39 @@ bool MainWindow::read_mcsv(const QString& file_path) {
             if (row > table->rowCount()) expand_vtable(table, row);
             if (column > table->columnCount()) expand_htable(table, column);
 
+            QVector<QPair<int,int>> relay;
             for (int i = 0; i < row; i++) {
                 line = in.readLine();
                 QStringList cells = line.split(',');
-                int col = cells.size();
-                for (int j = 0; j < col; j++) {
+                int column = cells.size();
+                for (int j = 0; j < column; j++) {
                     QString cell = cells[j];
                     if (cell.startsWith('"') && cell.endsWith('"'))
                         cell = cell.mid(1, cell.length() - 2);
 
                     QPair<int, int> pir = {i, j};
                     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
-                    auto final = Parser().parse(pir, table, cell);
-                    if(final.first == STRING_STATE::INVALID || final.first == STRING_STATE::HAS_CYCLE
-                        || final.first == STRING_STATE::NOT_NUMBER)
-                        item->setText(cell);
-                    else{
+                    // auto final = Parser().parse(pir, table, cell);
+                    // if(final.first == false)
+                    item->setText(cell);
+                    // else{
+                    //     item->update_caculate(final.second);
+                    //     item->update_func(cell);
+                    //     item->setText(QString::number(final.second));
+                    // }
+                    if(cell.startsWith('=')) relay.push_back(pir);
+                }
+            }
+            for (int j = 0; j < relay.size(); ++j) {
+                QPair<int,int> p=relay[j];
+                CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(p.first,p.second));
+                if(item->get_func().isEmpty()){
+                    QString cell = item->text();
+                    auto final = parser.parse(p,table, cell);
+                    if(final.first){
                         item->update_caculate(final.second);
                         item->update_func(cell);
                         item->setText(QString::number(final.second));
-                        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-                            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                                (table->item(value.first, value.second));
-                            auto final = Parser().parse(value, table, item->get_func());
-                            item->update_caculate(final.second);
-                            item->setText(QString::number(final.second));
-                        });
                     }
                 }
             }
@@ -303,10 +312,14 @@ bool MainWindow::read_mcsv(const QString& file_path) {
         auto last = std::chrono::high_resolution_clock().now();
         qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
         blockSignals(false);
+        for(int i=0;i<tables_.size();i++)
+            tables_[i]->blockSignals(false);
         return true;
     } else {
         qDebug() << u8"Unable to open file for reading.";
         blockSignals(false);
+        for(int i=0;i<tables_.size();i++)
+            tables_[i]->blockSignals(false);
         return false;
     }
 }
@@ -347,11 +360,14 @@ bool MainWindow::save_mcsv(const QString& file_path) {
 
 bool MainWindow::read_csv(CaculateTable* table, const QString& path) {
     auto start = std::chrono::high_resolution_clock().now();
+    blockSignals(true);
     table->blockSignals(true);
     QFile file(path);
+    Parser parser;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
         int row=0;
+        QVector<QPair<int,int>> relay;
         while (!in.atEnd()) {
             if(row > table->rowCount()) expand_vtable(table);
             QString line = in.readLine();
@@ -379,34 +395,59 @@ bool MainWindow::read_csv(CaculateTable* table, const QString& path) {
             int column = list.size();
             if(column > table->columnCount()) expand_htable(table, column);
 
-            for(int i=0;i<column;i++){
-                QString str = list.at(i);
-                QPair<int,int> pir = { row, i };
-                auto final = Parser().parse(pir, table, str);
-                CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(row, i));
+            for(int j=0;j<column;j++){
+                QString str = list.at(j);
+                QPair<int,int> pir = { row, j };
+                CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(row, j));
                 if(!item) {
                     item = new CaculateTableItem();
-                    table->setItem(row, i, item);
+                    table->setItem(row, j, item);
                 }
-                if(final.first == STRING_STATE::INVALID || final.first == STRING_STATE::HAS_CYCLE
-                    || final.first == STRING_STATE::NOT_NUMBER)
+                // auto final = parser.parse(pir, table, str);
+                // if(final.first) {
+                //     item->update_func(str);
+                //     item->update_caculate(final.second);
+                //     item->setText(QString::number(final.second));
+                //     table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
+                //         CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
+                //             (table->item(value.first, value.second));
+                //         auto final = Parser().parse(value, table, item->get_func());
+                //         item->update_caculate(final.second);
+                //         item->setText(QString::number(final.second));
+                //     });
+                // }
+                // else
                     item->setText(str);
-                else{
-                    item->update_caculate(final.second);
-                    item->update_func(str);
-                    item->setText(QString::number(final.second));
-                    table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-                        CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                            (table->item(value.first, value.second));
-                        auto final = Parser().parse(value, table, item->get_func());
-                        item->update_caculate(final.second);
-                        item->setText(QString::number(final.second));
-                    });
-                }
+                if(item->text().startsWith('=')) relay.push_back(pir);
             }
             row++;
         }
         file.close();
+        for (int j = 0; j < relay.size(); ++j) {
+            QPair<int,int> p=relay[j];
+            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(p.first,p.second));
+            if(item->get_func().isEmpty()){
+            QString cell = item->text();
+                auto final = parser.parse(p,table, cell);
+                if(final.first){
+                    item->update_caculate(final.second);
+                    item->update_func(cell);
+                    item->setText(QString::number(final.second));
+                }
+            }
+        }
+        // table->gph_->traverse_all_nodes([table](const QPair<int,int>& value) mutable -> void {
+        //     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
+        //         (table->item(value.first, value.second));
+        //     QString str = (item->get_func().isEmpty() ? item->text() : item->get_func());
+        //     auto final = Parser().parse(value, table, str);
+        //     if(final.first){
+        //         item->update_caculate(final.second);
+        //         item->update_func(str);
+        //         item->setText(QString::number(final.second));
+        //     }
+        // });
+        blockSignals(false);
         table->blockSignals(false);
         auto last = std::chrono::high_resolution_clock().now();
         qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
@@ -414,13 +455,16 @@ bool MainWindow::read_csv(CaculateTable* table, const QString& path) {
     }
     else {
         qDebug() << u8"Unable to open file for reading.";
+        blockSignals(false);
         table->blockSignals(false);
+        tables_[ui->main_tab->currentIndex()]->blockSignals(false);
         return false;
     }
 }
 
 bool MainWindow::save_csv(const QString& exc_path){
     blockSignals(true);
+    tables_[ui->main_tab->currentIndex()]->blockSignals(true);
     auto start = std::chrono::high_resolution_clock().now();
     QFile file(exc_path);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -440,11 +484,13 @@ bool MainWindow::save_csv(const QString& exc_path){
         qDebug() << u8"CSV file written successfully.";
         auto last = std::chrono::high_resolution_clock().now();
         qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
+        tables_[ui->main_tab->currentIndex()]->blockSignals(false);
         blockSignals(false);
         return true;
     }
     else {
         qDebug() << u8"Unable to open file for writing.";
+        tables_[ui->main_tab->currentIndex()]->blockSignals(false);
         blockSignals(false);
         return false;
     }
@@ -453,6 +499,8 @@ bool MainWindow::save_csv(const QString& exc_path){
 bool MainWindow::read_excel(const QString& path){
     auto start = std::chrono::high_resolution_clock().now();
     blockSignals(true);
+    for(int i=0;i<tables_.size();i++)
+        tables_[i]->blockSignals(true);
     QXlsx::Document* xlsx = new QXlsx::Document(path);
     if(!xlsx->load()){
         qDebug() << u8"打开失败";
@@ -483,18 +531,11 @@ bool MainWindow::read_excel(const QString& path){
                     QString str = value.toString();
                     QPair<int,int> pir = { i, j };
                     auto final = Parser().parse(pir, table, str);
-                    if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY){
+                    if(final.first){
                         CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(i, j));
                         item->update_caculate(final.second);
                         item->update_func(str);
                         item->setText(QString::number(final.second));
-                        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-                            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                                (table->item(value.first, value.second));
-                            auto final = Parser().parse(value, table, item->get_func());
-                            item->update_caculate(final.second);
-                            item->setText(QString::number(final.second));
-                        });
                     }
                     else {
                         dynamic_cast<CaculateTableItem*>(table->item(i, j))->setText(str);
@@ -508,6 +549,8 @@ bool MainWindow::read_excel(const QString& path){
     }
     delete xlsx;
     blockSignals(false);
+    for(int i=0;i<tables_.size();i++)
+        tables_[i]->blockSignals(false);
     auto last = std::chrono::high_resolution_clock::now();
     qDebug() << std::chrono::duration_cast<std::chrono::milliseconds>(last - start) << '\n';
     return true;
@@ -551,9 +594,9 @@ bool MainWindow::save_excel(const QString& path){
 }
 
 void MainWindow::func_btn_clicked(){
-    auto check = Parser::get_position(ui->position_lab->text());
+    auto check = Parser::getposition(ui->position_lab->text());
     if(!check.first) return;
-    QPair<int, int> pir = check.second;
+    auto pir = check.second;
     int idx = ui->main_tab->currentIndex();
     funcwindow* w = new funcwindow(pir, tables_.at(idx));
     w->setWindowModality(Qt::ApplicationModal);
@@ -561,47 +604,39 @@ void MainWindow::func_btn_clicked(){
 }
 
 void MainWindow::correct_btn_clicked(){
-    auto check = Parser::get_position(ui->position_lab->text());
+    auto check = Parser::getposition(ui->position_lab->text());
     if(!check.first) return;
-    QPair<int, int> pir = check.second;
+    auto pir = check.second;
     int idx = ui->main_tab->currentIndex();
     CaculateTable* table = tables_.at(idx);
+    table->blockSignals(true);
+    blockSignals(true);
     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(pir.first, pir.second));
     QString str = ui->func_label->text();
     auto final = Parser().parse(pir, table, str);
-    if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY) {
+    if(final.first) {
         item->update_func(str);
         item->update_caculate(final.second);
-        blockSignals(true);
-        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                (table->item(value.first, value.second));
-            auto final = Parser().parse(value, table, item->get_func());
-            item->update_caculate(final.second);
-            item->setText(QString::number(final.second));
-        });
         item->setText(QString::number(final.second));
     }
     else{
-        if(final.first == STRING_STATE::HAS_CYCLE)
-            QMessageBox::warning(this, u8"警告", u8"插入的公式将造成环，此公式将不会被执行");
-        else
-            QMessageBox::warning(this, u8"警告", u8"插入的公式非法，此公式将不会被执行");
-        blockSignals(true);
+        QMessageBox::warning(this, u8"警告", u8"插入的公式非法，此公式将不会被执行");
+        if(!item->get_func().isEmpty()) item->clear();
         item->setText(str);
     }
     ui->func_label->setText(str);
     blockSignals(false);
+    table->blockSignals(false);
 }
 
 void MainWindow::cancel_btn_clicked(){
-    auto check = Parser::get_position(ui->position_lab->text());
+    auto check = Parser::getposition(ui->position_lab->text());
     if(!check.first) return;
     QPair<int, int> pir = check.second;
-    int idx = ui->main_tab->currentIndex();
-    CaculateTable* table = tables_.at(idx);
+    CaculateTable* table = tables_.at(ui->main_tab->currentIndex());
     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(pir.first, pir.second));
     blockSignals(true);
+    table->blockSignals(true);
     if(!item->get_func().isEmpty()) {
         table->gph_->delete_income_edges(pir);
         table->gph_->delete_outgo_edges(pir);
@@ -610,6 +645,7 @@ void MainWindow::cancel_btn_clicked(){
     }
     ui->func_label->clear();
     blockSignals(false);
+    table->blockSignals(false);
 }
 
 void MainWindow::add_table_btn_clicked(){
@@ -618,49 +654,40 @@ void MainWindow::add_table_btn_clicked(){
 }
 
 void MainWindow::func_lab_changed(QString str){
-    auto check = Parser::get_position(ui->position_lab->text());
+    auto check = Parser::getposition(ui->position_lab->text());
     if(!check.first) return;
     QPair<int, int> pir = check.second;
-    int idx = ui->main_tab->currentIndex();
-    CaculateTable* table = tables_.at(idx);
+    CaculateTable* table = tables_.at(ui->main_tab->currentIndex());
     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(pir.first, pir.second));
     if(!item) return;
+    blockSignals(true);
     table->blockSignals(true);
     auto final = Parser().parse(pir, table, str);
-    if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY){
+    if(final.first){
         item->update_func(str);
         item->update_caculate(final.second);
         item->setText(QString::number(final.second));
-        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                (table->item(value.first, value.second));
-            auto final = Parser().parse(value, table, item->get_func());
-            item->update_caculate(final.second);
-            table->blockSignals(true);
-            table->item(value.first, value.second)->setText(QString::number(final.second));
-            table->blockSignals(false);
-        });
     }
     else{
-        if(!item->get_func().isEmpty()){
-            item->clear();
-        }
+        if(!item->get_func().isEmpty()) item->clear();
         item->setText(str);
     }
+    blockSignals(false);
     table->blockSignals(false);
 }
 
 void MainWindow::position_lab_changed(QString str){
     blockSignals(true);
-    auto check = Parser::get_position(str);
+    auto check = Parser::getposition(str);
     if(!check.first) return;
     QPair<int, int> pir = check.second;
-    int idx = ui->main_tab->currentIndex();
-    CaculateTable* table = tables_.at(idx);
+    CaculateTable* table = tables_.at(ui->main_tab->currentIndex());
+    table->blockSignals(true);
     table->setCurrentCell(pir.first, pir.second);
     CaculateTableItem* item = dynamic_cast<CaculateTableItem*>(table->item(pir.first, pir.second));
     table_view(item);
     blockSignals(false);
+    table->blockSignals(false);
 }
 
 void MainWindow::tab_double_clicked(int index){
@@ -678,6 +705,8 @@ void MainWindow::tab_double_clicked(int index){
 
 void MainWindow::table_view(QTableWidgetItem* item){
     blockSignals(true);
+    for(int i=0;i<tables_.size();i++)
+        tables_[i]->blockSignals(true);
     CaculateTableItem* ptr = dynamic_cast<CaculateTableItem*>(item);
     if(!ptr) return;
     ui->position_lab->setText(CaculateTableItem::column_alpha(ptr->column()) + QString::number(ptr->row() + 1));
@@ -688,39 +717,40 @@ void MainWindow::table_view(QTableWidgetItem* item){
         ptr->setText(QString::number(ptr->get_caculate()));
     }
     blockSignals(false);
+    for(int i=0;i<tables_.size();i++)
+        tables_[i]->blockSignals(false);
 }
 
 
-void MainWindow::table_item_changed(QTableWidgetItem* item){
-    blockSignals(true);
-    QPair<int, int> pir = {item->row(), item->column()};
-    CaculateTableItem* ptr = dynamic_cast<CaculateTableItem*>(item);
-    int idx = ui->main_tab->currentIndex();
-    CaculateTable* table = tables_.at(idx);
-    if(!ptr) return;
-    ui->position_lab->setText(CaculateTableItem::column_alpha(ptr->column()) + QString::number(ptr->row() + 1));
-    QString str = item->text();
-    auto final = Parser().parse(pir, table, str);
-    if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY){
-        ptr->update_func(str);
-        ptr->update_caculate(final.second);
-        ptr->setText(QString::number(final.second));
-        table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
-            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                (table->item(value.first, value.second));
-            auto final = Parser().parse(value, table, item->get_func());
-            item->update_caculate(final.second);
-            table->item(value.first, value.second)->setText(QString::number(final.second));
-        });
-    }
-    else{
-        if(!ptr->get_func().isEmpty()){
-            ptr->clear();
-        }
-        ptr->setText(str);
-    }
-    blockSignals(false);
-}
+// void MainWindow::table_item_changed(QTableWidgetItem* item){
+//     QPair<int, int> pir = {item->row(), item->column()};
+//     CaculateTableItem* ptr = dynamic_cast<CaculateTableItem*>(item);
+//     int idx = ui->main_tab->currentIndex();
+//     CaculateTable* table = tables_.at(idx);
+//     if(!ptr) return;
+//     ui->position_lab->setText(CaculateTableItem::column_alpha(ptr->column()) + QString::number(ptr->row() + 1));
+//     QString str = item->text();
+//     auto final = Parser().parse(pir, table, str);
+//     if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY){
+//         ptr->update_func(str);
+//         ptr->update_caculate(final.second);
+//         ptr->setText(QString::number(final.second));
+//         table->gph_->traverse(pir, [table](const QPair<int,int>& value) mutable -> void {
+//             CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
+//                 (table->item(value.first, value.second));
+//             auto final = Parser().parse(value, table, item->get_func());
+//             item->update_caculate(final.second);
+//             table->item(value.first, value.second)->setText(QString::number(final.second));
+//         });
+//     }
+//     else{
+//         if(!ptr->get_func().isEmpty()){
+//             ptr->clear();
+//         }
+//         ptr->setText(str);
+//     }
+//     blockSignals(false);
+// }
 
 void MainWindow::table_vertical_bar_changed(int value){
     QObject *send = sender();
@@ -744,29 +774,29 @@ void MainWindow::table_horizontal_bar_changed(int value){
     }
 }
 
-void MainWindow::read_binary_triggered(bool) {
-    QString exc_path = QFileDialog::getOpenFileName(this, QStringLiteral("选择载入文件")
-                                                    , setting::desk_path, "Txt Files(*.txt)");
-    if(exc_path.isEmpty()) return;
-    QMessageBox msg;
-    msg.setInformativeText(u8"若载入，当前工作区成员会与载入文件成员合并。是否继续？");
-    msg.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    msg.setDefaultButton(QMessageBox::Yes);
-    int ret = msg.exec();
-    if(ret==QMessageBox::Cancel) return;
-    if(!read_binary(exc_path)){
-        QMessageBox msgBox;
-        msgBox.setText(u8"载入失败，请检查路径");
-        msgBox.exec();
-    }
-}
+// void MainWindow::read_binary_triggered(bool) {
+//     QString exc_path = QFileDialog::getOpenFileName(this, QStringLiteral("选择载入文件")
+//                                                     , setting::desk_path, "Txt Files(*.txt)");
+//     if(exc_path.isEmpty()) return;
+//     QMessageBox msg;
+//     msg.setInformativeText(u8"若载入，当前工作区成员会与载入文件成员合并。是否继续？");
+//     msg.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+//     msg.setDefaultButton(QMessageBox::Yes);
+//     int ret = msg.exec();
+//     if(ret==QMessageBox::Cancel) return;
+//     if(!read_binary(exc_path)){
+//         QMessageBox msgBox;
+//         msgBox.setText(u8"载入失败，请检查路径");
+//         msgBox.exec();
+//     }
+// }
 
-void MainWindow::save_binary_triggered(bool){
-    QString exc_path = QFileDialog::getSaveFileName(this, QStringLiteral("选择导出路径")
-                                                    , setting::desk_path, "Txt Files(*.txt)");
-    if(exc_path.isEmpty()) return;
-    save_binary(exc_path);
-}
+// void MainWindow::save_binary_triggered(bool){
+//     QString exc_path = QFileDialog::getSaveFileName(this, QStringLiteral("选择导出路径")
+//                                                     , setting::desk_path, "Txt Files(*.txt)");
+//     if(exc_path.isEmpty()) return;
+//     save_binary(exc_path);
+// }
 
 void MainWindow::read_mcsv_triggered(bool) {
     QString exc_path = QFileDialog::getOpenFileName(this, QStringLiteral("选择载入文件")

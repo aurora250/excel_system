@@ -14,8 +14,8 @@ static const LANGUAGE current_language = LANGUAGE::CHINESE;
 static const QString resource_path = current_path + "/resource";
 static const QString title_icon = resource_path + "/title_icon.png";
 static const QString desk_path=QStandardPaths::standardLocations(QStandardPaths::DesktopLocation).at(0);
-static const int default_column = 100;
-static const int default_row = 100;
+static const int default_column = 50;
+static const int default_row = 50;
 
 static const QStringList math_fcns =
     { "ABS", "AVG", "SUM", "SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "ANGULAR",

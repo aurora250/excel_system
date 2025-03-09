@@ -68,24 +68,16 @@ void arguwindow::correct_btn_clicked(){
             break;
         }
     }
+    table_->blockSignals(true);
     CaculateTableItem* item_ = dynamic_cast<CaculateTableItem*>(table_->item(posi_->first, posi_->second));
     QString func =  "=" + *str_;
     auto final = Parser().parse(*posi_, table_, func);
-    if(final.first == STRING_STATE::VALID || final.first == STRING_STATE::IS_EMPTY){
+    if(final.first){
         item_->update_func(func);
         item_->update_caculate(final.second);
         item_->setText(QString::number(final.second));
-        table_->gph_->traverse(*posi_, [this](const QPair<int,int>& value) mutable -> void {
-            CaculateTableItem* item = dynamic_cast<CaculateTableItem*>
-                (this->table_->item(value.first, value.second));
-            auto final = Parser().parse(value, this->table_, item->get_func());
-            item->update_caculate(final.second);
-            item->setText(QString::number(final.second));
-        });
     }
     else{
-        if(final.first == STRING_STATE::HAS_CYCLE)
-            QMessageBox::warning(this, u8"警告", u8"插入的公式将造成环，此公式将不会被执行");
         item_->setText(func);
     }
     table_->blockSignals(false);
